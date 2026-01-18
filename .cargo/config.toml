@@ -1,0 +1,11 @@
+[build]
+target = "riscv64gc-unknown-linux-musl"
+
+[target.riscv64gc-unknown-linux-musl]
+linker = "riscv64-linux-musl-gcc"
+rustflags = ["-C", "target-feature=+crt-static"]
+runner = "qemu-riscv64"
+
+[env]
+CC_riscv64gc_unknown_linux_musl = "riscv64-linux-musl-gcc"
+AR_riscv64gc_unknown_linux_musl = "riscv64-linux-musl-ar"
