@@ -1,3 +1,6 @@
+> [!warning]
+> Probably https://github.com/scristobal/c-in-rust-bare-riscv-qemu is a better example as it covers both with and without an OS
+
 # Cross compile a Rust project with C dependencies into RISC-V 
 
 ## Generate Rust bindings for the C code 
