@@ -1,12 +1,10 @@
-mod gcd {
-    mod bindings {
-        include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-    }
+mod bindings {
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
-    pub fn gcd(n: i32, m: i32) -> i32 {
-        let pair = &mut bindings::Pair { n, m };
-        unsafe { bindings::gcd(pair) }
-    }
+pub fn gcd(n: i32, m: i32) -> i32 {
+    let pair = &mut bindings::Pair { n, m };
+    unsafe { bindings::gcd(pair) }
 }
 
 /// Continued fraction representation of a rational number.
@@ -18,14 +16,11 @@ pub struct ContinuedFraction {
 
 impl ContinuedFraction {
     /// Convert a rational number p/q to its continued fraction representation.
-    /// Uses the Euclidean algorithm (which is based on GCD).
     pub fn from_rational(mut p: i32, mut q: i32) -> Self {
-        // Simplify the fraction first using GCD
-        let d = gcd::gcd(p.abs(), q.abs());
+        let d = gcd(p.abs(), q.abs());
         p /= d;
         q /= d;
 
-        // Handle sign
         if q < 0 {
             p = -p;
             q = -q;
@@ -47,12 +42,10 @@ impl ContinuedFraction {
             return (0, 1);
         }
 
-        // Work backwards: start from the last coefficient
         let mut num = *self.coefficients.last().unwrap();
         let mut den = 1;
 
         for &coef in self.coefficients.iter().rev().skip(1) {
-            // At each step: result = coef + 1/previous = coef + den/num = (coef*num + den)/num
             (num, den) = (coef * num + den, num);
         }
 
@@ -64,8 +57,7 @@ impl ContinuedFraction {
         &self.coefficients
     }
 
-    /// Compute convergents - the sequence of rational approximations.
-    /// Returns pairs (h_n, k_n) where h_n/k_n approaches the original value.
+    /// Compute convergents pairs (h_n, k_n) where h_n/k_n approaches the original value.
     pub fn convergents(&self) -> Vec<(i32, i32)> {
         let mut result = Vec::new();
 
@@ -97,50 +89,33 @@ mod tests {
 
     #[test]
     fn test_gcd() {
-        assert_eq!(gcd::gcd(9, 3), 3);
-        assert_eq!(gcd::gcd(48, 18), 6);
-        assert_eq!(gcd::gcd(7, 7), 7);
-        assert_eq!(gcd::gcd(100, 25), 25);
-        assert_eq!(gcd::gcd(17, 13), 1);
+        assert_eq!(gcd(9, 3), 3);
+        assert_eq!(gcd(48, 18), 6);
+        assert_eq!(gcd(7, 7), 7);
+        assert_eq!(gcd(100, 25), 25);
+        assert_eq!(gcd(17, 13), 1);
     }
 
     #[test]
-    fn test_continued_fraction_simple() {
-        // 3/1 = [3]
+    fn test_continued_fraction() {
         let cf = ContinuedFraction::from_rational(3, 1);
         assert_eq!(cf.coefficients(), &[3]);
-    }
 
-    #[test]
-    fn test_continued_fraction_half() {
-        // 1/2 = [0; 2]
         let cf = ContinuedFraction::from_rational(1, 2);
         assert_eq!(cf.coefficients(), &[0, 2]);
-    }
 
-    #[test]
-    fn test_continued_fraction_golden_approx() {
-        // 89/55 (Fibonacci ratio) ≈ golden ratio
-        // Equals [1; 1, 1, 1, 1, 1, 1, 1, 2] in shortest form
         let cf = ContinuedFraction::from_rational(89, 55);
         assert_eq!(cf.coefficients(), &[1, 1, 1, 1, 1, 1, 1, 1, 2]);
-    }
 
-    #[test]
-    fn test_roundtrip() {
         let test_cases = [(3, 7), (22, 7), (1, 3), (5, 1), (89, 55)];
 
         for (p, q) in test_cases {
             let cf = ContinuedFraction::from_rational(p, q);
             let (p2, q2) = cf.to_rational();
-            // Check equality: p/q == p2/q2 means p*q2 == p2*q
+
             assert_eq!(p * q2, p2 * q, "Roundtrip failed for {}/{}", p, q);
         }
-    }
 
-    #[test]
-    fn test_convergents() {
-        // 22/7 = [3; 7]
         let cf = ContinuedFraction::from_rational(22, 7);
         let conv = cf.convergents();
         assert_eq!(conv, vec![(3, 1), (22, 7)]);
